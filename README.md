@@ -21,7 +21,7 @@ This will create `src/solitaire.sav` which can be loaded into an emulator or fla
 
 ## Running in mGBA
 
-As long as `mgba` is in your path, then `make clean && make runsav` should build the game then immediately launch it in mGBA.
+As long as `mgba` is in your path, then `make clean && make runsav` should build the game then immediately launch it in mGBA. This requires the ereader ROM to be where the Makefile expects it. Look for `EREADER_MGBA_ROM` in the Makefile.
 
 ## Creating raws and bmps
 
@@ -52,3 +52,11 @@ The graphics are built using `src/convertpng`, a very simple png to gba graphics
 I wrote this using [asz80](https://shop-pdp.net/ashtml/asz80.htm) which is a very old, but pretty good, z80 assembler. It's main gotcha is it doesn't directly produce a binary. If you look in the Makefile, you will see asm->bin is several steps.
 
 You can get asz80 binaries here: https://shop-pdp.net/ashtml/asxget.php
+
+## Japanese support
+
+Solitaire runs as-is on the Japanese E-Reader+. It has no text, and is completely compatible.
+
+To build for Japanese: `make REGION=2 raws` or `make REGION=2 bmps`. `REGION=2` is not needed when building the sav file, as no region checking is done with sav files.
+
+To run it in mGBA on the Japanese ereader ROM, `make runsavjpn`. With the sav file approach, there is no region checking. It will appear garbeled in the ereader menu, but other than that work just fine. You need to have the Japanese ereader ROM where the Makefile expects it. Check the Makefile for details.
