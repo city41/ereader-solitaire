@@ -1,0 +1,16 @@
+
+controls
+
+grab a card
+
+drop a card
+
+cancel grab
+
+go to deck
+
+cycle music
+
+hold
+
+restart
