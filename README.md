@@ -2,7 +2,7 @@
 
 This is the classic game of solitaire for the Nintendo E-Reader. It is written as an E-Reader z80 application.
 
-![screenshot](https://github.com/city41/ereader-solitaire/blob/main/screenshot.png?raw=true)
+![screenshot](https://github.com/city41/ereader-solitaire/blob/main/screenshot_2x.png?raw=true)
 
 This is the first z80/ereader app I wrote, and so the code is pretty bad in places, and the build process is also pretty bad. I will eventually come back and modernize it.
 
