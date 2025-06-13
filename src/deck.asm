@@ -671,5 +671,3 @@ _deck_grabbed_row:
     .db 0
 deck_grabbed_cards:
     .dw 0,0,0,0,0,0,0
-_deck_was_achievement_already_accomplished:
-    .db 0
