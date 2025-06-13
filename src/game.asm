@@ -6,7 +6,6 @@
     GAME_GRAB_SOURCE_PLAYFIELD = 2
 
 game_init:
-    call cursor_gfx_init
     call deal_pile_load_cards
 
     call deck_gfx_render
@@ -15,44 +14,46 @@ game_init:
     ret
 
 game_frame:
-    ld hl, (input_just_pressed)
+    call repeat_input_read
+
+    ld hl, (input_repeat_pressed)
     ld a, l
     and ERAPI_KEY_RIGHT
     call nz, _game_handle_right
 
-    ld hl, (input_just_pressed)
+    ld hl, (input_repeat_pressed)
     ld a, l
     and ERAPI_KEY_LEFT
     call nz, _game_handle_left
 
-    ld hl, (input_just_pressed)
+    ld hl, (input_repeat_pressed)
     ld a, l
     and ERAPI_KEY_DOWN
     call nz, _game_handle_down
 
-    ld hl, (input_just_pressed)
+    ld hl, (input_repeat_pressed)
     ld a, l
     and ERAPI_KEY_UP
     call nz, _game_handle_up
 
-    ld hl, (input_just_pressed)
+    ld hl, (SYS_INPUT_JUST)
     ld a, l
     and ERAPI_KEY_A
     call nz, _game_handle_a
 
-    ld hl, (input_just_pressed)
+    ld hl, (SYS_INPUT_JUST)
     ld a, l
     and ERAPI_KEY_B
     call nz, _game_handle_b
 
-    ld hl, (input_just_pressed)
+    ld hl, (SYS_INPUT_JUST)
     ld a, h
     and ERAPI_KEY_L
     call nz, _game_handle_l
 
     ;; keep track of how long r has been pressed
     ;; if held long enough, will reset the game
-    ld hl, (input_pressed)
+    ld hl, (SYS_INPUT_RAW)
     ld a, h
     and ERAPI_KEY_R
     jr z, _game_frame__clear_r_count
@@ -80,7 +81,7 @@ game_frame:
 _game_has_been_won:
     ;; first if there was no input, then nothing happened this frame
     ;; so game can't possibly be won
-    ld hl, (input_just_pressed)
+    ld hl, (SYS_INPUT_JUST)
     ld a, h
     ;; if h | l === 0, then both are zero, no input
     or l
@@ -99,7 +100,7 @@ _game_has_been_won:
     jr nz, _game_has_been_won__nope
 
     ;; is there a dealt card?
-    ld a, (deal_pile_top_dealt_card)
+    call deal_pile_get_top_dealt_card
     cp 0
     ;; if there is a dealt card, we are not done
     jr nz, _game_has_been_won__nope
@@ -140,20 +141,17 @@ _game_handle_win:
     ld a, #30
     .db 0x76
 
-    ; ERAPI_SpriteCreate()
-    ; e  = pal#
-    ; hl = sprite data
-    ld  e, #0x08
-    ld  hl, _game_sprite_you_win
+    ld de, 4126 ; complete
+    ld a, 8
     rst 0
-    .db ERAPI_SpriteCreate
+    .db ERAPI_CreateSystemSprite
 
-    ;; position it center x, a bit high for y
+    ;; position it bit off center for x, a bit high for y
     ; ERAPI_SetSpritePos()
     ; hl = handle
     ; de = x
     ; bc = y
-    ld de, 120
+    ld de, 124
     ld bc, 53
     rst  0
     .db  ERAPI_SetSpritePos
@@ -165,8 +163,7 @@ _game_handle_win:
     ld a, 1
     halt
 
-    call input_read
-    ld hl, (input_just_pressed)
+    ld hl, (SYS_INPUT_JUST)
     ld a, l
     and ERAPI_KEY_A
     jr z, _game_handle_win__loop
@@ -393,25 +390,6 @@ _game_grabbed_source:
     .db 0
 _game_r_count:
     .db 0
-
-    .even
-_game_tiles_you_win:
-    .include "you_win.tiles.asm"
-    .even
-_game_palette_you_win:
-    .include "you_win.palette.asm"
-
-    .even
-_game_sprite_you_win:
-    .dw _game_tiles_you_win  ; tiles
-    .dw _game_palette_you_win; palette
-    .db 0x06          ; width
-    .db 0x03          ; height
-    .db 0x01          ; frames
-    .db 0x01          ; ?
-    .db 0x08          ; ?
-    .db 0x08          ; ?
-    .db 0x01          ; ?
 
     .even
     .include "cards_util.asm"

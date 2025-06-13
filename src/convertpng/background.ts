@@ -39,7 +39,7 @@ async function processBackground(
 ): Promise<ProcessBackgroundResult> {
   const canvas = await reduceColors(await createCanvasFromPath(bg.file), 16);
 
-  const palette = extractPalette(canvas);
+  const palette = extractPalette(canvas, !bg.trimPalette);
 
   const allTilesThatFormImage = extractTiles(canvas, palette, 1);
   const dedupedTiles = dedupeTiles(allTilesThatFormImage);

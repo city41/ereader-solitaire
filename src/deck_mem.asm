@@ -14,6 +14,7 @@
 ;; returns
 ;; hl: the column's pointer
 deck_mem_get_pointer_to_column:
+    ;; save bc
     push bc
     ld hl, deck_mem_columns
     ld b, 0
@@ -26,8 +27,9 @@ deck_mem_get_pointer_to_column:
     ld c, (hl)
     inc hl
     ld b, (hl)
-    ld h, b
-    ld l, c
+    push bc
+    pop hl
+    ;; restore saved bc
     pop bc
     ret
 

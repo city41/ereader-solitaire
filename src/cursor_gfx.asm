@@ -381,16 +381,51 @@ _cursor_gfx_render_in_deal_pile:
 _cursor_gfx_render_in_dealt_pile:
     call _cursor_gfx_hide_grabbed_card_sprites
 
-    ld hl, (_cursor_gfx_sprite_cursor_current_handle)
 
     ld de, CURSOR_GFX_DEALT_PILE_X
     ld bc, CURSOR_GFX_DEALT_PILE_Y
 
+    ld a, (mode_chosen_mode)
+    cp MODE_SINGLE
+    jr z, _cursor_gfx_render_in_dealt_pile__render
+
+    ;; this is triple mode, need to move the cursor based on how many cards have been dealt
+    call deal_pile_get_second_top_dealt_card
+    cp 0
+    ;; only one card? we are good to go
+    jr z, _cursor_gfx_render_in_dealt_pile__render
+
+    call deal_pile_get_third_top_dealt_card
+    cp 0
+    jr z, _cursor_gfx_render_in_dealt_pile__two_cards
+    ;; there are three cards, need to move x over
+    ld h, d
+    ld l, e
+    ld de, 16
+    add hl, de
+    ld d, h
+    ld e, l
+    jr _cursor_gfx_render_in_dealt_pile__render
+
+
+
+    _cursor_gfx_render_in_dealt_pile__two_cards:
+    ;; there are two cards, need to move x over
+    ld h, d
+    ld l, e
+    ld de, 8
+    add hl, de
+    ld d, h
+    ld e, l
+
+
+    _cursor_gfx_render_in_dealt_pile__render:
     ; move the cursor
     ; ERAPI_SetSpritePos()
     ; hl = handle
     ; de = x
     ; bc = y
+    ld hl, (_cursor_gfx_sprite_cursor_current_handle)
     rst  0
     .db  ERAPI_SetSpritePos
 
@@ -504,14 +539,9 @@ _cursor_gfx_tiles_cursor_grab:
     .include "cursor_grab.tiles.asm"
 
     .even
-;; cursor and cursor_gfx_grab use the same palette
-_cursor_gfx_palette_cursor:
-    .include "cursor.palette.asm"
-
-    .even
 _cursor_gfx_sprite_cursor:
     .dw _cursor_gfx_tiles_cursor  ; tiles
-    .dw _cursor_gfx_palette_cursor; palette
+    .dw palette_deck; palette
     .db 0x02          ; width
     .db 0x02          ; height
     .db 0x02          ; frames
@@ -523,7 +553,7 @@ _cursor_gfx_sprite_cursor:
     .even
 _cursor_gfx_sprite_cursor_grab:
     .dw _cursor_gfx_tiles_cursor_grab  ; tiles
-    .dw _cursor_gfx_palette_cursor; palette
+    .dw palette_deck; palette
     .db 0x02          ; width
     .db 0x02          ; height
     .db 0x01          ; frames

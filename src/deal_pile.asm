@@ -6,7 +6,7 @@ deal_pile_grab_dealt_card:
     ;; already have a grabbed card? nothing to do here
     ret nz
 
-    ld a, (deal_pile_top_dealt_card)
+    call deal_pile_get_top_dealt_card
     cp 0
     ;; there is no card to grab? nothing to do here
     ret z
@@ -14,12 +14,6 @@ deal_pile_grab_dealt_card:
     push hl
     push bc
     push de
-
-    ld a, (_deal_pile_dealt_pile_i)
-    ;; -1 means the dealt pile is empty
-    cp -1
-    ;; if there is no card to grab, bail
-    jr z, deal_pile_grab_dealt_card__done
 
     ld a, (_deal_pile_dealt_pile_i)
     ;; move the index to previous one
@@ -41,32 +35,9 @@ deal_pile_grab_dealt_card:
     ld a, (hl)
     ld (hl), 0
 
-    ;; temp move to d
-    ld d, a
-
-    ;; now fix top dealt card
-    dec hl
-
-    ld a, (_deal_pile_dealt_pile_i)
-    cp -1
-    jr nz, deal_pile_grab_dealt_card__skip_zero_out_top_card
-    ld a, 0
-    jr deal_pile_grab_dealt_card__set_top_card
-
-    deal_pile_grab_dealt_card__skip_zero_out_top_card:
-    ld a, (hl)
-
-    deal_pile_grab_dealt_card__set_top_card:
-    ld (deal_pile_top_dealt_card), a
-
-    ;; get the grabbed card back from d
-    ld a, d
-
     ld (deck_grabbed_cards), a
     ld a, 0
     ld (deck_grabbed_cards+1), a
-
-    deal_pile_grab_dealt_card__done:
 
     pop de
     pop bc
@@ -98,8 +69,6 @@ deal_pile_cancel_grab:
     ld a, (deck_grabbed_cards)
     ;; stick it in the dealt pile
     ld (hl), a
-    ;; stick it here for convenience, the rest of the game will draw from this
-    ld (deal_pile_top_dealt_card), a
 
     ;; clear out the grabbed card
     ld a, 0
@@ -112,18 +81,46 @@ deal_pile_cancel_grab:
     call sound_play_column_drop_sfx
     ret
 
+deal_pile_deal:
+    ld a, (mode_chosen_mode)
+    cp 1
+    jr z, deal_pile_deal__single_mode
 
+    ;; this is triple mode
+    ld b, 1
+    call _deal_pile_deal_one_card
+    ld b, 0
+    call _deal_pile_deal_one_card
+    ld b, 0
+    call _deal_pile_deal_one_card
+    ret
+
+    deal_pile_deal__single_mode:
+    ld b, 1
+    call _deal_pile_deal_one_card
+    ret
 ;;
 ;; grabs the next card in the deal pile and places it in the dealt pile
+;;
+;; parameters
+;; b: 0 to not allow refill, 1 to allow refill
 ;; 
-deal_pile_deal:
+_deal_pile_deal_one_card:
     ld a, (_deal_pile_deal_pile_i)
     ;; negative one? the deal pile is empty
     cp -1
-    jr nz, _deal_pile_deal__skip_refill
+    jr nz, _deal_pile_deal__not_empty
+
+    ;; the deal pile is empty, does the caller want us to refill?
+    ld a, b
+    cp 0
+    ;; do not allow a refill
+    ret z
+
+    ;; ok the caller wants us to refill, let's try it
 
     ;; but can we refill? are there any dealt cards?
-    ld a, (deal_pile_top_dealt_card)
+    call deal_pile_get_top_dealt_card
     cp 0
     ;; no cards to refill with. nothing we can do, just bail
     ret z
@@ -133,17 +130,16 @@ deal_pile_deal:
     call sound_play_refill_sfx
     ;; wait a bit to help the player understand what happened
     ;; it also seperates the refill and drop sfx's
-    ld a, #20
+    ld a, 20
     halt
 
-    _deal_pile_deal__skip_refill:
+    _deal_pile_deal__not_empty:
 
     push hl
     push bc
     push de
 
     ;; move the top card of deal_pile to bottom of dealt_pile
-    ;; TODO: if deal_pile is empty, move dealt_pile to deal_pile
 
     ;; grab current deal pile index
     ld a, (_deal_pile_deal_pile_i)
@@ -191,8 +187,6 @@ deal_pile_deal:
     ld a, d
     ;; stick it in the dealt pile
     ld (hl), a
-    ;; stick it here for convenience, the rest of the game will draw from this
-    ld (deal_pile_top_dealt_card), a
 
     call sound_play_column_drop_sfx
 
@@ -294,8 +288,59 @@ deal_pile_load_cards:
     pop bc
     ret
 
+;;
+;; loads the top of the dealt pile into a
+;;
+deal_pile_get_top_dealt_card:
+    push bc
+    push hl
+    ld a, (_deal_pile_dealt_pile_i)
+    ld hl, _deal_pile_dealt_pile
+    ld b, 0
+    ld c, a
+    add hl, bc
+    ld a, (hl)
+    pop hl
+    pop bc
+    ret
 
-deal_pile_top_dealt_card:
+;;
+;; loads the card just under the top of the dealth pile int a
+;;
+deal_pile_get_second_top_dealt_card:
+    push bc
+    push hl
+    ld a, (_deal_pile_dealt_pile_i)
+    dec a
+    ld hl, _deal_pile_dealt_pile
+    ld b, 0
+    ld c, a
+    add hl, bc
+    ld a, (hl)
+    pop hl
+    pop bc
+    ret
+
+;;
+;; loads the card just tow under the top of the dealth pile int a
+;;
+deal_pile_get_third_top_dealt_card:
+    push bc
+    push hl
+    ld a, (_deal_pile_dealt_pile_i)
+    dec a
+    dec a
+    ld hl, _deal_pile_dealt_pile
+    ld b, 0
+    ld c, a
+    add hl, bc
+    ld a, (hl)
+    pop hl
+    pop bc
+    ret
+
+
+deal_pile_third_top_dealt_card:
     .db 0
 _deal_pile_deal_pile_i:
     .db (DEAL_PILE_STARTING_SIZE - 1)

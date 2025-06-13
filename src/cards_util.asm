@@ -40,8 +40,8 @@ cards_util_get_rank:
     ld a, l
     cp 0
     jr nz, cards_util_get_rank__skip_set_king
-    ;; if it was zero, then it's actually 13
-    ld a, #13
+    ;; if it was zero, then it's actually 13, ie king
+    ld a, 13
 
     cards_util_get_rank__skip_set_king:
     pop hl

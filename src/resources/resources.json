@@ -2,24 +2,22 @@
   "outputDir": "..",
   "sprites": [
     {
-      "file": "cursor_grab.png",
-      "frames": 1
-    },
-    {
-      "file": "cursor.png",
-      "frames": 2
-    },
-    {
-      "file": "deck.png",
-      "frames": 61
-    },
-    {
-      "file": "retro_logo.png",
-      "frames": 1
-    },
-    {
-      "file": "you_win.png",
-      "frames": 1
+      "sharedPalette": [
+        {
+          "file": "cursor_grab.png",
+          "frames": 1
+        },
+        {
+          "file": "cursor.png",
+          "frames": 2
+        },
+        {
+          "file": "deck.png",
+          "frames": 61
+        }
+      ],
+      "name": "globalPalette",
+      "trimPalette": true
     }
   ]
 }

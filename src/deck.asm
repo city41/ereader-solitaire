@@ -1,4 +1,3 @@
-
 ;; inspects the columns looking for a back card
 ;; if one is found, a=1, else a=0
 ;;
@@ -33,7 +32,9 @@ deck_is_there_a_back_card:
 
 
 deck_deal_deck:
-    call _deck_shuffle
+    .ifndef DEBUG
+        call _deck_shuffle
+    .endif
 
     ld d, 0
     ld e, 0
@@ -670,3 +671,5 @@ _deck_grabbed_row:
     .db 0
 deck_grabbed_cards:
     .dw 0,0,0,0,0,0,0
+_deck_was_achievement_already_accomplished:
+    .db 0

@@ -35,6 +35,19 @@
 
     DECK_GFX_MAX_CARDS_IN_COL_TO_FIT_NORMALLY=10
 
+deck_gfx_random_back:
+    ld hl, palette_deck + 16
+    ld a, 200
+    rst 8
+    .db ERAPI_RandMax
+    ld (hl), a
+    inc hl
+    ld a, 200
+    rst 8
+    .db ERAPI_RandMax
+    ld (hl), a
+    ret
+
 ;; this is just a regular render but with forced empty
 ;; deal and dealt piles. this is used during the intro
 deck_gfx_render_with_empty_deal_dealt:
@@ -137,6 +150,7 @@ _deck_gfx_render_deal_pile:
     ld a, DECK_GFX_DEAL_PILE_Y
     ld (_deck_gfx_cur_card_y), a
 
+    ;; render the deal pile
     ld a, (_deal_pile_deal_pile_i)
     ;; -1 means the deal pile is empty
     cp -1
@@ -150,7 +164,77 @@ _deck_gfx_render_deal_pile:
 
     call _deck_gfx_render_card
 
-    ;; the dealt pile
+    ;; now, the dealt pile
+    ld a, (mode_chosen_mode)
+    cp 1
+    jr z, _deck_gfx_render_deal_pile__single_mode
+
+    ;; triple mode
+
+    ;; no cards dealt
+    call deal_pile_get_top_dealt_card
+    cp 0
+    jr z, _deck_gfx_render_deal_pile__single_mode
+
+    ;; one card dealt
+    call deal_pile_get_second_top_dealt_card
+    cp 0
+    jr z, _deck_gfx_render_deal_pile__single_mode
+
+    call deal_pile_get_third_top_dealt_card
+    cp 0
+    jr z, _deck_gfx_render_deal_pile__triple_mode_two_cards
+
+    ;; triple mode, three cards dealt
+    ;; we already have the right frame in a
+    ;; third card
+    ld (_deck_gfx_cur_card_frame), a
+    ld a, DECK_GFX_DEALT_PILE_X
+    ld (_deck_gfx_cur_column_x), a
+    ld a, DECK_GFX_DEALT_PILE_Y
+    ld (_deck_gfx_cur_card_y), a
+    call _deck_gfx_render_card
+    ;; second card
+    call deal_pile_get_second_top_dealt_card
+    ld (_deck_gfx_cur_card_frame), a
+    ld a, DECK_GFX_DEALT_PILE_X + 1
+    ld (_deck_gfx_cur_column_x), a
+    ld a, DECK_GFX_DEALT_PILE_Y
+    ld (_deck_gfx_cur_card_y), a
+    call _deck_gfx_render_card
+    ;; third card
+    call deal_pile_get_top_dealt_card
+    ld (_deck_gfx_cur_card_frame), a
+    ld a, DECK_GFX_DEALT_PILE_X + 2
+    ld (_deck_gfx_cur_column_x), a
+    ld a, DECK_GFX_DEALT_PILE_Y
+    ld (_deck_gfx_cur_card_y), a
+    call _deck_gfx_render_card
+    ret
+
+    _deck_gfx_render_deal_pile__triple_mode_two_cards:
+    ;; second card
+    call deal_pile_get_second_top_dealt_card
+    ld (_deck_gfx_cur_card_frame), a
+    ld a, DECK_GFX_DEALT_PILE_X
+    ld (_deck_gfx_cur_column_x), a
+    ld a, DECK_GFX_DEALT_PILE_Y
+    ld (_deck_gfx_cur_card_y), a
+    call _deck_gfx_render_card
+    ;; third card
+    call deal_pile_get_top_dealt_card
+    ld (_deck_gfx_cur_card_frame), a
+    ld a, DECK_GFX_DEALT_PILE_X + 1
+    ld (_deck_gfx_cur_column_x), a
+    ld a, DECK_GFX_DEALT_PILE_Y
+    ld (_deck_gfx_cur_card_y), a
+    call _deck_gfx_render_card
+    ret
+
+    _deck_gfx_render_deal_pile__single_mode:
+    ;; single mode, just render one card
+    ;; or triple mode with only one card dealt
+    ;; or triple mode with no cards dealt
     ld a, DECK_GFX_DEALT_PILE_X
     ld (_deck_gfx_cur_column_x), a
     ld a, DECK_GFX_DEALT_PILE_Y
@@ -158,7 +242,7 @@ _deck_gfx_render_deal_pile:
 
     ;; ok now for the frame
     ;; if a card has been dealt, then that's the frame
-    ld a, (deal_pile_top_dealt_card)
+    call deal_pile_get_top_dealt_card
     ;; if a card has not been dealt, we need to use the empty frame
     cp a, 0
     jr nz, _deck_gfx_render_deal_pile__skip_dealt_empty
@@ -569,7 +653,7 @@ tiles_deck_end:
 
     .even
 palette_deck:
-    .include "deck.palette.asm"
+    .include "globalPalette.shared.palette.asm"
 palette_deck_end:
     palette_deck_size = (palette_deck_end - palette_deck)
 

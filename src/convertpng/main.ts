@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import * as fsp from "fs/promises";
 import { ImportedJsonSpec, JsonSpec } from "./types";
-import { processSprite } from "./sprite";
+import { isBasicSpriteSpec, processSprite } from "./sprite";
 import { processBackground } from "./background";
 
 /**
@@ -16,10 +16,22 @@ function hydrateJsonSpec(jsonSpecPath: string): JsonSpec {
     ...initialSpec,
     outputDir: path.resolve(rootDir, initialSpec.outputDir),
     sprites: (initialSpec.sprites ?? []).map((s) => {
-      return {
-        ...s,
-        file: path.resolve(rootDir, s.file),
-      };
+      if (isBasicSpriteSpec(s)) {
+        return {
+          ...s,
+          file: path.resolve(rootDir, s.file),
+        };
+      } else {
+        return {
+          ...s,
+          sharedPalette: s.sharedPalette.map((ss) => {
+            return {
+              ...ss,
+              file: path.resolve(rootDir, ss.file),
+            };
+          }),
+        };
+      }
     }),
     backgrounds: (initialSpec.backgrounds ?? []).map((bg) => {
       return {
@@ -33,20 +45,46 @@ function hydrateJsonSpec(jsonSpecPath: string): JsonSpec {
 async function main(jsonSpec: JsonSpec) {
   for (const sprite of jsonSpec.sprites) {
     const processResult = await processSprite(sprite);
-    const fileRoot = path.basename(sprite.file, path.extname(sprite.file));
-    const tilesAsmPath = path.resolve(
-      jsonSpec.outputDir,
-      `${fileRoot}.tiles.asm`
-    );
-    const paletteAsmPath = path.resolve(
-      jsonSpec.outputDir,
-      `${fileRoot}.palette.asm`
-    );
+    if (isBasicSpriteSpec(sprite)) {
+      const fileRoot = path.basename(sprite.file, path.extname(sprite.file));
+      const tilesAsmPath = path.resolve(
+        jsonSpec.outputDir,
+        `${fileRoot}.tiles.asm`
+      );
+      const paletteAsmPath = path.resolve(
+        jsonSpec.outputDir,
+        `${fileRoot}.palette.asm`
+      );
 
-    await fsp.writeFile(tilesAsmPath, processResult.tilesAsmSrc);
-    console.log("wrote", tilesAsmPath);
-    await fsp.writeFile(paletteAsmPath, processResult.paletteAsmSrc);
-    console.log("wrote", paletteAsmPath);
+      await fsp.writeFile(tilesAsmPath, processResult.tilesAsmSrc[0]);
+      console.log("wrote", tilesAsmPath);
+      await fsp.writeFile(paletteAsmPath, processResult.paletteAsmSrc);
+      console.log("wrote", paletteAsmPath);
+    } else {
+      for (let i = 0; i < sprite.sharedPalette.length; ++i) {
+        const subsprite = sprite.sharedPalette[i];
+
+        const fileRoot = path.basename(
+          subsprite.file,
+          path.extname(subsprite.file)
+        );
+        const tilesAsmPath = path.resolve(
+          jsonSpec.outputDir,
+          `${fileRoot}.tiles.asm`
+        );
+
+        await fsp.writeFile(tilesAsmPath, processResult.tilesAsmSrc[i]);
+        console.log("wrote", tilesAsmPath);
+      }
+
+      const paletteAsmPath = path.resolve(
+        jsonSpec.outputDir,
+        `${sprite.name}.shared.palette.asm`
+      );
+
+      await fsp.writeFile(paletteAsmPath, processResult.paletteAsmSrc);
+      console.log("wrote", paletteAsmPath);
+    }
   }
 
   for (const bg of jsonSpec.backgrounds) {

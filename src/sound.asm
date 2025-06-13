@@ -26,6 +26,42 @@ sound_play_bgm3:
     .db ERAPI_PlaySystemSound
     ret
 
+sound_pause_bgm1:
+    ld hl, SOUND_BGM1
+    rst 8
+    .db ERAPI_PauseSound
+    ret
+
+sound_pause_bgm2:
+    ld hl, SOUND_BGM2
+    rst 8
+    .db ERAPI_PauseSound
+    ret
+
+sound_pause_bgm3:
+    ld hl, SOUND_BGM3
+    rst 8
+    .db ERAPI_PauseSound
+    ret
+
+sound_resume_bgm1:
+    ld hl, SOUND_BGM1
+    rst 8
+    .db ERAPI_ResumeSound
+    ret
+
+sound_resume_bgm2:
+    ld hl, SOUND_BGM2
+    rst 8
+    .db ERAPI_ResumeSound
+    ret
+
+sound_resume_bgm3:
+    ld hl, SOUND_BGM3
+    rst 8
+    .db ERAPI_ResumeSound
+    ret
+
 sound_play_error_sfx:
     ld hl, 80
     rst 8
@@ -114,7 +150,32 @@ sound_cycle_bgm:
 
     cp 3
     call z, sound_play_bgm3
+    ret
 
+sound_pause_bgm:
+    ld a, (_sound_cur_bgm)
+
+    cp 1
+    call z, sound_pause_bgm1
+
+    cp 2
+    call z, sound_pause_bgm2
+
+    cp 3
+    call z, sound_pause_bgm3
+    ret
+
+sound_resume_bgm:
+    ld a, (_sound_cur_bgm)
+
+    cp 1
+    call z, sound_resume_bgm1
+
+    cp 2
+    call z, sound_resume_bgm2
+
+    cp 3
+    call z, sound_resume_bgm3
     ret
 
 _sound_cur_bgm:
