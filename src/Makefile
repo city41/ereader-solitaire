@@ -27,7 +27,7 @@ NEVPK=$(BIN)/nevpk
 ASLINK=$(BIN)/aslink
 ASZ80=$(BIN)/asz80
 # convertpng is a node program
-CONVERTPNG=../scripts/convertpng.sh
+CONVERTPNG=../node_modules/.bin/gba-convertpng
 
 REGION ?= 1
 DPI ?= 1200

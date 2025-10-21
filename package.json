@@ -4,6 +4,7 @@
   "author": "Matt Greer <matt.e.greer@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@city41/gba-convertpng": "^0.0.3",
     "@types/imagemagick": "^0.0.35",
     "@types/lodash": "^4.17.13",
     "@types/mkdirp": "^2.0.0",
