@@ -51,7 +51,7 @@ The graphics are built using `src/convertpng`, a very simple png to gba graphics
 
 I wrote this using [asz80](https://shop-pdp.net/ashtml/asz80.htm) which is a very old, but pretty good, z80 assembler. It's main gotcha is it doesn't directly produce a binary. If you look in the Makefile, you will see asm->bin is several steps.
 
-You can get asz80 binaries here: https://shop-pdp.net/ashtml/asxget.php
+You can get asz80 binaries here https://shop-pdp.net/ashtml/asxget.php
 
 ## Japanese support
 
